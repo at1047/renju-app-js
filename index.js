@@ -1,11 +1,16 @@
 var canvas = document.querySelector('canvas');
+
+document.getElementById("restart").onclick = undo;
+document.getElementById("undo").onclick = undo;
+document.getElementById("surrender").onclick = undo;
+
 // const dim = canvas.height;
 console.log(canvas.height);
 console.log(canvas.width);
 // canvas.height = canvas.width = dim
 // canvas.style = "position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; margin: auto; border: 0px none black; background-color: #d4913d"
 var ctx = canvas.getContext('2d');
-
+const boardSize = 19;
 // var dim = fitToContainer(canvas);
 
 // function fitToContainer(canvas){
@@ -18,11 +23,10 @@ var ctx = canvas.getContext('2d');
 // }
 canvas.width  = canvas.offsetWidth;
 canvas.height = canvas.offsetHeight;
-const dim = canvas.width;
+var dim = canvas.width;
+var gridSpacing = dim/boardSize;
+var padding = gridSpacing/2;
 
-const boardSize = 19;
-const gridSpacing = dim/boardSize;
-const padding = gridSpacing/2;
 const whitePiece = "#FFFFFF"
 const blackPiece = "#000000"
 const directions = [[0,1], [1,0], [1,1], [1,-1]]; // Vertical, Horizontal, Up right diag, up left diag
@@ -78,14 +82,23 @@ function drawAllPieces(dict) {
     }   
 }
 
+function undo() {
+    lastPiece = playOrder.pop();
+    rmPiece(lastPiece['x'], lastPiece['y']);
+}
+
 function addPiece(x, y, color) {
     dict[x][y] = (color == blackPiece)? 1 : 2; 
     colorString = (color == blackPiece)? "Black Piece" : "White Piece";
     console.log(colorString + " added at " + x + ", " + y);
+    playOrder.push({'x': x, 'y': y});
+    redrawEverything();
 }
 
 function rmPiece(x, y) {
     dict[x][y] = 0;
+    console.log(colorString + " removed at " + x + ", " + y);
+    redrawEverything();
 }
 
 function checkLength(x, y) {
@@ -141,7 +154,7 @@ function game(x, y) {
     const currentTurn = (turn == 1)? blackPiece : whitePiece;
     if (dict[x][y] == 0) {
         addPiece(x, y, currentTurn);
-        redrawEverything();
+        
         infoObj = checkLength(x, y);
         if (infoObj["win"] != -1) {
             const currentPlayer = (turn == 1)? "Black" : "White";
@@ -180,8 +193,17 @@ canvas.addEventListener('mouseleave', (e) => {
     currentHover = {'x': undefined, 'y': undefined};
 })
 
-dict = initBoard();
+window.addEventListener('resize', () => {
+    canvas.width  = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    dim = canvas.width;
+    gridSpacing = dim/boardSize;
+    padding = gridSpacing/2;
+})
+
+let dict = initBoard();
 redrawEverything();
+let playOrder = [];
 let currentHover = {'x': undefined, 'y': undefined};
 
 
