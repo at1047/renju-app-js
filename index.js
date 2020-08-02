@@ -1,10 +1,26 @@
 var canvas = document.querySelector('canvas');
-const dim = Math.min(window.innerHeight, window.innerWidth) * 0.9;
-canvas.height = canvas.width = dim
-canvas.style = "position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; margin: auto; border: 0px none black; background-color: #d4913d"
+// const dim = canvas.height;
+console.log(canvas.height);
+console.log(canvas.width);
+// canvas.height = canvas.width = dim
+// canvas.style = "position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; margin: auto; border: 0px none black; background-color: #d4913d"
 var ctx = canvas.getContext('2d');
 
-const boardSize = 16;
+// var dim = fitToContainer(canvas);
+
+// function fitToContainer(canvas){
+//   // Make it visually fill the positioned parent
+//     // canvas.style.width ='100%';
+//     // canvas.style.height='100%';
+//   // ...then set the internal size to match
+//     
+//     return canvas.width;
+// }
+canvas.width  = canvas.offsetWidth;
+canvas.height = canvas.offsetHeight;
+const dim = canvas.width;
+
+const boardSize = 19;
 const gridSpacing = dim/boardSize;
 const padding = gridSpacing/2;
 const whitePiece = "#FFFFFF"
@@ -27,12 +43,13 @@ function drawGrid() {
     ctx.stroke();
 }
 
-function drawPiece(x, y, color) {
+function drawPiece(x, y, color, alpha) {
     let xCoord = x * gridSpacing + padding  
     let yCoord = y * gridSpacing + padding  
     ctx.beginPath();
     ctx.arc(xCoord, yCoord, gridSpacing * 0.45, 0*Math.PI, 2*Math.PI);
-    ctx.fillStyle = color;
+    ctx.fillStyle = color + alpha;
+    ctx.strokeStyle = color + alpha;
     ctx.fill();
     ctx.stroke();
 }
@@ -53,9 +70,9 @@ function drawAllPieces(dict) {
     for (x in dict) {
         for (y in dict[x]) {
             if (dict[x][y] == 1) {
-                drawPiece(x, y, blackPiece);
+                drawPiece(x, y, blackPiece, "FF");
             } else if (dict[x][y] == 2) {
-                drawPiece(x, y, whitePiece);
+                drawPiece(x, y, whitePiece, "FF");
             }
         }
     }   
@@ -111,23 +128,21 @@ function redrawEverything() {
     drawAllPieces(dict);
 }
 
-function coordToPos(x, y) {
-    x = Math.floor(x / gridSpacing);
-    y = Math.floor(y / gridSpacing);
-    return [x,y];
-}
-
 function getCursorPosition(canvas, event) {
     const rect = canvas.getBoundingClientRect()
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    [xCoord,yCoord] = coordToPos(x,y);
-    console.log("x: " + xCoord + " y: " + yCoord);
+    xGrid = Math.max(Math.floor(x / gridSpacing), 0);
+    yGrid = Math.max(Math.floor(y / gridSpacing), 0);
+    return [xGrid, yGrid]
+}
+
+function game(x, y) {
     const currentTurn = (turn == 1)? blackPiece : whitePiece;
-    if (dict[xCoord][yCoord] == 0) {
-        addPiece(xCoord, yCoord, currentTurn);
+    if (dict[x][y] == 0) {
+        addPiece(x, y, currentTurn);
         redrawEverything();
-        infoObj = checkLength(xCoord, yCoord);
+        infoObj = checkLength(x, y);
         if (infoObj["win"] != -1) {
             const currentPlayer = (turn == 1)? "Black" : "White";
             alert(currentPlayer + " won!")
@@ -136,12 +151,38 @@ function getCursorPosition(canvas, event) {
     }
 }
 
-canvas.addEventListener('mousedown', function(e) {
-    getCursorPosition(canvas, e);
+
+function hover(x,y) {
+    const currentTurn = (turn == 1)? blackPiece : whitePiece;
+
+    if (dict[x][y] == 0 && !(x == currentHover['x'] && y == currentHover['y'])) {
+        redrawEverything();
+        currentHover['x'] = x;
+        currentHover['y'] = y;
+        drawPiece(x,y,currentTurn, "66");
+    }
+}
+
+canvas.addEventListener('mousedown', (e) => {
+    [x, y] = getCursorPosition(canvas, e);
+    game(x, y);
+})
+
+
+
+canvas.addEventListener('mousemove', (e) => {
+    [x, y] = getCursorPosition(canvas, e);
+    hover(x,y);
+})
+
+canvas.addEventListener('mouseleave', (e) => {
+    redrawEverything();
+    currentHover = {'x': undefined, 'y': undefined};
 })
 
 dict = initBoard();
 redrawEverything();
+let currentHover = {'x': undefined, 'y': undefined};
 
 
 // addPiece(2, 2, blackPiece);

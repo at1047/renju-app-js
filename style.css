@@ -1,3 +1,40 @@
+.flex-container {
+   display: flex; 
+   justify-content: center;
+   align-items: flex-start;
+   flex-direction: column;
+   position:relative;
+}
+
+#board {
+    height: min(90vh, 90vw);
+    width: min(90vh, 90vw);
+    position:relative;
+}
+
+#buttons {
+    padding: 10px;
+    flex-direction: row;
+}
+
+@media only screen and (orientation: landscape) {
+   #main {
+    flex-direction: row;
+   }
+
+   #buttons {
+    flex-direction: column;
+   } 
+}
+
+button {
+    height: 50px;
+    width: 50px;
+    margin: 10px;
+}
+
 canvas {
-	border: 1px solid black;
+    height: 100%;
+    width: 100%;
+    background-color: #d4913d;
 }
